@@ -9,7 +9,7 @@
 ifeq ($(OS), Windows_NT)
     DETECTED_OS := Windows
     SEP         := ;
-    PYTHON      := python
+    PYTHON      := py
     RM_DIR      := rmdir /s /q
     RM_FILE     := del /f /q
     MKDIR       := mkdir

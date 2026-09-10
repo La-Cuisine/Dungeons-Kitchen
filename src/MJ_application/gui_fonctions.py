@@ -1,9 +1,9 @@
 import os
 import shutil
 from pathlib import Path
-from PySide6.QtCore import QSettings, QTimer, Qt, QSize
+from PySide6.QtCore import QSettings, QTimer, Qt, QSize, QEventLoop
 from PySide6.QtGui import QColor, QPalette, QPainter, QBrush, QPixmap, QIcon
-from PySide6.QtWidgets import QGraphicsScene, QFileDialog, QPushButton, QScrollArea, QWidget, QVBoxLayout, QSizePolicy, QListWidgetItem, QInputDialog, QMessageBox
+from PySide6.QtWidgets import QGraphicsScene, QFileDialog, QPushButton, QScrollArea, QWidget, QVBoxLayout, QSizePolicy, QListWidgetItem, QInputDialog, QMessageBox,QDialog
 from Custom_Widgets import *
 from Custom_Widgets.QAppSettings import QAppSettings
 from Custom_Widgets.QCustomTheme import QCustomTheme
@@ -15,6 +15,7 @@ from src.MJ_application.server import SERVER_URL, ServerController
 from src.MJ_application.LogReaderThread import LogReaderThread
 from src.MJ_application.grid import View_Grid, Grid, InvisibleWallLimit, DraggableImageList
 from src.MJ_gamemode.MJ_gamemode import MainWindow as GameModeWindow
+from src.MJ_application.img_divider import Divider_Window 
 from src.MJ_application.Sym_const import *
 from obj.blueprint import *
 from obj.game import *
@@ -146,8 +147,9 @@ class GuiFunctions():
         # Add images
         # Add images
         self.ui.add_cells_image_btn.clicked.connect(
-            lambda: self.load_image(CELL_DIRECTORIES, self.ui.cells_image_list)
+            lambda: self.load_add_cells_img_btns()
         )
+        # self.load_image(CELL_DIRECTORIES, self.ui.cells_image_list)
 
         self.ui.add_props_image_btn.clicked.connect(
             lambda: self.load_image(PROP_DIRECTORIES, self.ui.props_image_list)
@@ -1950,6 +1952,53 @@ class GuiFunctions():
 
             self.switch_to_skill_menu()
 
+    def load_add_cells_img_btns(self):
+        dialog_add_img_cell = QDialog()
+        dialog_add_img_cell.setWindowTitle("Image options")
+        dialog_add_img_cell.setWindowIcon(QIcon("icon.png"))
+        import_btn = QPushButton(parent=dialog_add_img_cell,text="Import image")
+        divide_btn = QPushButton(parent=dialog_add_img_cell,text="Divide image")
+        
+        dialog_add_img_cell.setFixedSize(import_btn.width()+divide_btn.width()+40,import_btn.height()+40)
+        import_btn.move(20,(import_btn.height()-10))
+        divide_btn.move(import_btn.width()+25,(import_btn.height()-10))
+
+        
+        import_btn.clicked.connect(
+            lambda: self.load_image(CELL_DIRECTORIES, self.ui.cells_image_list)
+        )
+
+        divide_btn.clicked.connect(
+                    lambda: self.load_divider()
+        )
+
+        divide_btn.released.connect(dialog_add_img_cell.destroy)
+
+        dialog_add_img_cell.exec()
+
+    def load_divider(self):
+        print(os.path.dirname(os.path.abspath(__file__)))
+        filename, _ = QFileDialog.getOpenFileName(
+            self.main,
+            "Select image",
+            "",
+            "Images (*.png *.jpg *.jpeg *.gif)"
+        )
+        if not filename:
+            return
+        dw = Divider_Window(64,filename,f"{os.path.dirname(os.path.abspath(__file__))}/../../Assets/Images/temp_dividing_img")
+        dw.setWindowTitle("Dividing Bits")
+        dw.setWindowIcon(QIcon("icon.png"))
+        dw.show()
+        dw.raise_()
+        dw.activateWindow()    
+        waiter = QEventLoop()
+        dw.destroyed.connect(waiter.quit)
+        waiter.exec()
+        del dw
+                            
+
+
     def load_image(self, directories, target_list):
         """
         Import an image into the local assets folder and refresh the list.
@@ -1966,6 +2015,7 @@ class GuiFunctions():
         )
         if not filename:
             return
+        
         source = Path(filename)
         # Always save in local folder
         local_dir = directories[-1]
