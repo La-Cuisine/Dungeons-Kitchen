@@ -1972,6 +1972,7 @@ class GuiFunctions():
                     lambda: self.load_divider()
         )
 
+        import_btn.released.connect(dialog_add_img_cell.destroy)
         divide_btn.released.connect(dialog_add_img_cell.destroy)
 
         dialog_add_img_cell.exec()

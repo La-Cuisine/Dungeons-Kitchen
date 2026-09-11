@@ -485,7 +485,8 @@ class View_Interface_divise(QGraphicsView):
 class IMG_SPACE(QGraphicsRectItem):
     def __init__(self, path : str,  nx : int,ny : int, s_cell : int):
         super().__init__(0, 0, nx * s_cell, ny * s_cell)
-        global img_W, img_H, img, _expand
+        global img_W, img_H, img, _expand, _destinate_folder
+        self.tmpfold = _destinate_folder
         self.nx = nx
         self.ny = ny
         self.w = nx * s_cell
@@ -525,12 +526,20 @@ class IMG_SPACE(QGraphicsRectItem):
         self._backcell = [item for item in self.childItems() if isinstance(item, Interface_Cell) if item.getBackCell() == True]
         self._gpos = QPointF(0, 0)
 
+
     
     def captures(self) :
-        global _capturestart
+        global _capturestart, _filename_prefix,_destinate_folder
         _capturestart = True
         if self.img_rect is not None :
             self.img_rect.setVisible(False)
+        if not _filename_prefix or not _filename_prefix.strip() :
+            folder = f"{time.strftime("%Y%m%d_%H%M%S")}"
+            os.makedirs(f"{self.tmpfold}/{folder}")
+            _destinate_folder = f"{self.tmpfold}/{folder}"
+        else : 
+            os.makedirs(f"{self.tmpfold}/{_filename_prefix}")
+            _destinate_folder = f"{self.tmpfold}/{_filename_prefix}"
         for it in self._atoms:
             if it.capture() == False:
                 qd = QDialog()
@@ -848,10 +857,10 @@ class Interface_Cell(QGraphicsRectItem):
        #     self.parentItem().setVisible(True)
             paint.end()
             self.setVisible(True)
-            if not _filename_prefix or not _filename_prefix.strip() :
+            if not _filename_prefix or not _filename_prefix.strip() :    
                 writer = QImageWriter(f"{_destinate_folder}/{time.strftime("%Y%m%d")}_{self._coord[0]}_{self._coord[1]}.png")
             else : 
-                writer = QImageWriter(f"{{_destinate_folder}}/{_filename_prefix}_{self._coord[0]}_{self._coord[1]}.png")
+                writer = QImageWriter(f"{_destinate_folder}/{_filename_prefix}_{self._coord[0]}_{self._coord[1]}.png")
             if writer.write(img_) == False :
                 if writer.error().value == QImageWriter.ImageWriterError.DeviceError:
                     return False
